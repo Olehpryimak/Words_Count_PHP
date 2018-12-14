@@ -1,10 +1,5 @@
-<!DOCTYPE html>
-<meta charset="utf-8">
-
-
-
-<?php
-require_once './app/header.php';
+<?php require_once './app/header.php';
+require_once './app/header2.php';
 ?>
 <!--Використовуємо Bootstrap для адаптивної верстки -->
 <div class="container" style="margin-top: 4%">
@@ -14,13 +9,27 @@ require_once './app/header.php';
 
             <?php
             $data = $_POST;
-            $check = 1;
             $errors;
+            
+            
 // Перевіряємо з якої кнопки ми прийшли і проводимо реєстрацію
             if (isset($data['do_signup']) && isset($data['email'])) {
-
-
-
+                
+                
+                if (R::count('users' , "email = ?" , array($data["email"])) > 0 ) {
+                    $errors[] = "Користувач з таким email вже зареєстрований!";
+                    
+                }
+                
+                if(isset($data['name'])== FALSE){
+                    $errors[] = "Введіть ім'я!";
+                }
+                
+                if (isset($data['password'])==FALSE) {
+                    $errors[] = 'Введіть пароль';
+                }
+              
+                
                 if (strlen($data['password']) <= 3) {
                     $errors[] = 'Пароль надто короткий - мінімум 4 символи!';
                 }
@@ -29,22 +38,22 @@ require_once './app/header.php';
                     $errors[] = 'Паролі не збігаються!';
                 }
 
-
+                // запис в базу даних
                 if (empty($errors)) {
-                    $check = 2;
+
                     $user = R::dispense('users');
-                    $user->name = $_POST['name'];
-                    $user->email = $_POST['email'];
-                    $user->password = $_POST['password'];
+                    $user->name = $data['name'];
+                    $user->email = $data['email'];
+                    $user->password = password_hash($data['password'],PASSWORD_DEFAULT);
                     R::store($user);
                     ?>    
-            <div class="bg-success" style="text-align: center; font-weight: bold">
+                    <div class="bg-success" style="text-align: center; font-weight: bold">
                         <?php echo 'Ви успішно пройшли реєстрацію'; ?>
                     </div>
                     <?php
                 } else {
 
-                    $check = 3;
+                    
                     ?>
                     <div class="bg-warning" style="text-align: center; font-weight: bold">
                         <?php echo array_shift($errors); ?>
@@ -56,7 +65,7 @@ require_once './app/header.php';
             <div class="well">
 
                 <div class="form-group" >
-                    <form style="text-align: center" id="sighup" action="/" method="post">
+                    <form style="text-align: center" id="signup" action="/" method="post">
                         <h2>Sign Up</h2>
                         <br>
                         <input type="text" name="name" value=""class="form-control"placeholder="Ваше ім'я" required>
@@ -76,8 +85,42 @@ require_once './app/header.php';
         <div class="col-md-1"></div>
         <div class="col-md-3">
 
+            <?php
+            if(isset($data['do_login'])){
+                $user = R::findOne('users', 'email = ?', array($data['email']));
+                if($user)
+                {
+               if(password_verify($data['password'],$user->password)){
+                   $_SESSION ['logged_user'] = $user['id'];?>
+                  <script>document.location.href="./upload.php"</script>
+                   <?php
+               } 
+               else{
+                   $errors2 [] = 'Пароль введено не правильно!';
+                   
+               }
+                }
+                else{
+                    $errors2 [] = 'Не існує користувача з таким email!';
+                }
+            
+            
+            if (!empty($errors2)) {
 
-
+                    
+                    ?>
+                    <div class="bg-warning" style="text-align: center; font-weight: bold">
+                        <?php echo array_shift($errors2); ?>
+                    </div>             
+                    <?php
+                }
+            
+            }
+            
+            
+            
+            ?>
+            
             <div class="well">
 
                 <div class="form-group">
@@ -93,7 +136,7 @@ require_once './app/header.php';
                         <br>
 
                         <div style="text-align: center">
-                            <button type="submit" class="btn btn-success btn-md" >Вхід</button>
+                            <button type="submit"  name="do_login" class="btn btn-success btn-md" >Вхід</button>
                         </div>
                     </form>
                 </div>
