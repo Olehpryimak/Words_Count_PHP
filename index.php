@@ -1,5 +1,29 @@
-<?php require_once './app/header.php';
+<?php
+require_once './app/header.php';
 require_once './app/header2.php';
+class User {
+
+
+var $id;
+var $timezone;
+
+function Gettz() {
+echo $this->$timezone;
+}
+
+function Settz($tz) {
+$this->timezone = $tz;
+}
+
+function Getid() {
+echo $this->id;
+}
+
+function Setid($id) {
+$this->id = $id;
+}
+}
+
 ?>
 <!--Використовуємо Bootstrap для адаптивної верстки -->
 <div class="container" style="margin-top: 4%">
@@ -10,26 +34,25 @@ require_once './app/header2.php';
             <?php
             $data = $_POST;
             $errors;
-            
-            
+
+
 // Перевіряємо з якої кнопки ми прийшли і проводимо реєстрацію
             if (isset($data['do_signup']) && isset($data['email'])) {
-                
-                
-                if (R::count('users' , "email = ?" , array($data["email"])) > 0 ) {
+
+
+                if (R::count('users', "email = ?", array($data["email"])) > 0) {
                     $errors[] = "Користувач з таким email вже зареєстрований!";
-                    
                 }
-                
-                if(isset($data['name'])== FALSE){
+
+                if (isset($data['name']) == FALSE) {
                     $errors[] = "Введіть ім'я!";
                 }
-                
-                if (isset($data['password'])==FALSE) {
+
+                if (isset($data['password']) == FALSE) {
                     $errors[] = 'Введіть пароль';
                 }
-              
-                
+
+
                 if (strlen($data['password']) <= 3) {
                     $errors[] = 'Пароль надто короткий - мінімум 4 символи!';
                 }
@@ -44,7 +67,7 @@ require_once './app/header2.php';
                     $user = R::dispense('users');
                     $user->name = $data['name'];
                     $user->email = $data['email'];
-                    $user->password = password_hash($data['password'],PASSWORD_DEFAULT);
+                    $user->password = password_hash($data['password'], PASSWORD_DEFAULT);
                     R::store($user);
                     ?>    
                     <div class="bg-success" style="text-align: center; font-weight: bold">
@@ -52,8 +75,6 @@ require_once './app/header2.php';
                     </div>
                     <?php
                 } else {
-
-                    
                     ?>
                     <div class="bg-warning" style="text-align: center; font-weight: bold">
                         <?php echo array_shift($errors); ?>
@@ -86,41 +107,39 @@ require_once './app/header2.php';
         <div class="col-md-3">
 
             <?php
-            if(isset($data['do_login'])){
+            if (isset($data['do_login'])) {
                 $user = R::findOne('users', 'email = ?', array($data['email']));
-                if($user)
-                {
-               if(password_verify($data['password'],$user->password)){
-                   $_SESSION ['logged_user'] = $user['id'];?>
-                  <script>document.location.href="./upload.php"</script>
-                   <?php
-               } 
-               else{
-                   $errors2 [] = 'Пароль введено не правильно!';
-                   
-               }
-                }
-                else{
+                if ($user) {
+                    if (password_verify($data['password'], $user->password)) {
+
+                        
+                        $object = new User;
+                        $object->Setid($user['id']);
+                        $object->Settz($_POST['timezone']);
+                        
+
+                        $_SESSION ['logged_user'] = $object;
+                        ?>
+                        <script>document.location.href = "./upload.php"</script>
+                        <?php
+                    } else {
+                        $errors2 [] = 'Пароль введено не правильно!';
+                    }
+                } else {
                     $errors2 [] = 'Не існує користувача з таким email!';
                 }
-            
-            
-            if (!empty($errors2)) {
 
-                    
+
+                if (!empty($errors2)) {
                     ?>
                     <div class="bg-warning" style="text-align: center; font-weight: bold">
-                        <?php echo array_shift($errors2); ?>
+                    <?php echo array_shift($errors2); ?>
                     </div>             
                     <?php
                 }
-            
             }
-            
-            
-            
             ?>
-            
+
             <div class="well">
 
                 <div class="form-group">
@@ -132,7 +151,7 @@ require_once './app/header2.php';
                         <input type="email" name="email" value=""class="form-control"placeholder="Введіть email" required>
                         <br>
                         <input type="password" name="password" value=""class="form-control"placeholder="Введіть пароль" required>
-
+                        <input type="hidden" name="timezone" id="tz">
                         <br>
 
                         <div style="text-align: center">
@@ -145,7 +164,11 @@ require_once './app/header2.php';
         </div>
     </div>
 </div>
+<script>
 
+    document.getElementById("tz").value = new Date().getTimezoneOffset();
+
+</script>
 <?php
 require_once './app/footer.php';
 ?>
